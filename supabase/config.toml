@@ -1,1 +1,4 @@
 project_id = "oxhhcnxsvsyhpmhpsfht"
+
+[functions.create-products-bucket]
+verify_jwt = false
