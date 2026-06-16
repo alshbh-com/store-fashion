@@ -1,17 +1,7 @@
-const ADMIN_PASSWORD = "01515703849";
+const ADMIN_PASSWORD = "01278006248";
 
-export const checkAdminAuth = (password: string): boolean => {
+export const verifyAdminPassword = (password: string): boolean => {
   return password === ADMIN_PASSWORD;
 };
 
-export const isAdminAuthenticated = (): boolean => {
-  return localStorage.getItem("adminAuth") === "true";
-};
-
-export const setAdminAuth = (authenticated: boolean): void => {
-  if (authenticated) {
-    localStorage.setItem("adminAuth", "true");
-  } else {
-    localStorage.removeItem("adminAuth");
-  }
-};
+export const getAdminPassword = (): string => ADMIN_PASSWORD;
