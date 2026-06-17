@@ -106,10 +106,20 @@ export interface InvoiceCellOptions {
   watermarkText: string;
   logoUrl?: string | null;
   partialNote?: string;
+  cellIndex?: number;
 }
 
+// Distinct color palette per cell position to avoid confusion between invoices on same page
+const CELL_COLORS = [
+  { bar: "#0F172A", accent: "#1E293B", tag: "A" }, // dark slate
+  { bar: "#7C2D12", accent: "#9A3412", tag: "B" }, // burnt orange
+  { bar: "#14532D", accent: "#166534", tag: "C" }, // forest green
+  { bar: "#581C87", accent: "#6B21A8", tag: "D" }, // purple
+];
+
 export const generateInvoiceCell = (order: InvoiceOrder, opts: InvoiceCellOptions): string => {
-  const { brandName, watermarkText, logoUrl, partialNote } = opts;
+  const { brandName, watermarkText, logoUrl, partialNote, cellIndex = 0 } = opts;
+  const palette = CELL_COLORS[cellIndex % 4];
   const totalAmount = parseFloat(order.total_amount.toString());
   const customerShipping = parseFloat((order.shipping_cost || 0).toString());
   const totalPrice = totalAmount + customerShipping;
@@ -120,69 +130,70 @@ export const generateInvoiceCell = (order: InvoiceOrder, opts: InvoiceCellOption
     : "";
 
   return `<div class="invoice-cell">
-    <div style="position:relative;width:100%;height:100%;padding:5mm;box-sizing:border-box;font-family:Arial,'Cairo',sans-serif;display:flex;flex-direction:column;overflow:hidden;color:#000;background:#fff;">
-      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);font-size:64px;font-weight:900;color:rgba(0,0,0,0.06);pointer-events:none;z-index:0;white-space:nowrap;letter-spacing:4px;">${watermarkText}</div>
-      <div style="position:relative;z-index:1;display:flex;align-items:stretch;border:2.5px solid #000;">
-        <div style="flex:1.3;padding:7px 10px;border-left:2.5px solid #000;display:flex;align-items:center;gap:10px;">
+    <div style="position:relative;width:100%;height:100%;padding:3mm;box-sizing:border-box;font-family:Arial,'Cairo',sans-serif;display:flex;flex-direction:column;overflow:hidden;color:#000;background:#fff;border-top:4px solid ${palette.bar};">
+      <div style="position:absolute;top:6px;left:6px;width:26px;height:26px;border-radius:50%;background:${palette.bar};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;z-index:5;box-shadow:0 1px 3px rgba(0,0,0,0.3);">${palette.tag}</div>
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);font-size:52px;font-weight:900;color:rgba(0,0,0,0.05);pointer-events:none;z-index:0;white-space:nowrap;letter-spacing:4px;">${watermarkText}</div>
+      <div style="position:relative;z-index:1;display:flex;align-items:stretch;border:2px solid #000;">
+        <div style="flex:1.3;padding:4px 8px;border-left:2px solid #000;display:flex;align-items:center;gap:8px;">
           ${logoHtml}
           <div>
-            <div style="font-size:24px;font-weight:900;line-height:1;letter-spacing:1px;">${brandName}</div>
-            <div style="font-size:11px;margin-top:3px;">📅 ${new Date(order.created_at).toLocaleDateString("ar-EG")}</div>
+            <div style="font-size:18px;font-weight:900;line-height:1;letter-spacing:1px;">${brandName}</div>
+            <div style="font-size:9px;margin-top:2px;">📅 ${new Date(order.created_at).toLocaleDateString("ar-EG")}</div>
           </div>
         </div>
-        <div style="flex:1;padding:7px 10px;text-align:center;background:#000;color:#fff;">
-          <div style="font-size:10px;letter-spacing:2px;">ORDER NO.</div>
-          <div style="font-size:28px;font-weight:900;line-height:1;">#${order.order_number || order.id.slice(0, 8)}</div>
+        <div style="flex:1;padding:4px 8px;text-align:center;background:${palette.bar};color:#fff;">
+          <div style="font-size:9px;letter-spacing:2px;">ORDER NO.</div>
+          <div style="font-size:22px;font-weight:900;line-height:1;">#${order.order_number || order.id.slice(0, 8)}</div>
         </div>
       </div>
-      <div style="position:relative;z-index:1;border:2.5px solid #000;border-top:0;padding:5px;text-align:center;">
-        <img src="${generateBarcodeDataUrl(order.tracking_code || `ORD-${order.order_number || order.id.slice(0,8)}`, { width: 2, height: 48, fontSize: 13, margin: 1 })}" style="max-height:54px;display:block;margin:0 auto;filter:grayscale(100%);" />
+      <div style="position:relative;z-index:1;border:2px solid #000;border-top:0;padding:2px;text-align:center;">
+        <img src="${generateBarcodeDataUrl(order.tracking_code || `ORD-${order.order_number || order.id.slice(0,8)}`, { width: 1.6, height: 36, fontSize: 11, margin: 1 })}" style="max-height:40px;display:block;margin:0 auto;filter:grayscale(100%);" />
       </div>
-      <div style="position:relative;z-index:1;border:2.5px solid #000;border-top:0;padding:9px 12px;">
-        <div style="font-size:12px;font-weight:700;letter-spacing:2px;border-bottom:1.5px solid #000;padding-bottom:4px;margin-bottom:6px;">إلى / TO</div>
-        <div style="font-size:19px;font-weight:900;line-height:1.2;">${order.customers?.name || ""}</div>
-        <div style="font-size:14px;line-height:1.7;margin-top:4px;">
+      <div style="position:relative;z-index:1;border:2px solid #000;border-top:0;padding:5px 8px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;border-bottom:1px solid #000;padding-bottom:2px;margin-bottom:3px;">إلى / TO</div>
+        <div style="font-size:15px;font-weight:900;line-height:1.1;">${order.customers?.name || ""}</div>
+        <div style="font-size:11px;line-height:1.4;margin-top:2px;">
           <strong>هاتف:</strong> ${order.customers?.phone || ""}${order.customers?.phone2 ? ` · ${order.customers.phone2}` : ""}<br/>
           <strong>المحافظة:</strong> ${order.governorates?.name || order.customers?.governorate || "-"}<br/>
           <strong>العنوان:</strong> ${order.customers?.address || ""}
         </div>
-        ${order.notes ? `<div style="margin-top:5px;font-size:12px;border-top:1px dashed #000;padding-top:4px;"><strong>📝 ملاحظات:</strong> ${order.notes}</div>` : ""}
+        ${order.notes ? `<div style="margin-top:3px;font-size:10px;border-top:1px dashed #000;padding-top:2px;"><strong>📝</strong> ${order.notes}</div>` : ""}
       </div>
-      <div style="position:relative;z-index:1;border:2.5px solid #000;border-top:0;flex:1;display:flex;flex-direction:column;overflow:hidden;">
-        <div style="background:#000;color:#fff;padding:5px 10px;font-size:13px;font-weight:700;display:flex;justify-content:space-between;letter-spacing:1px;">
+      <div style="position:relative;z-index:1;border:2px solid #000;border-top:0;flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;">
+        <div style="background:${palette.bar};color:#fff;padding:3px 8px;font-size:11px;font-weight:700;display:flex;justify-content:space-between;letter-spacing:1px;flex-shrink:0;">
           <span>المنتجات (${invoiceItems.length})</span>
           <span>الكمية · السعر</span>
         </div>
-        <div style="flex:1;padding:3px 0;">
+        <div style="flex:1;overflow:hidden;">
           ${invoiceItems.map((item, idx) => {
             const itemTotal = item.price * item.quantity;
-            return `<div style="display:flex;align-items:center;gap:6px;padding:5px 10px;font-size:13px;border-bottom:1px dashed #888;">
-              <span style="font-weight:900;font-size:15px;min-width:20px;">${idx + 1}.</span>
-              <span style="flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.productName}${(item.itemSize || item.itemColor) ? ` <span style="font-weight:400;font-size:11px;">(${[item.itemSize, item.itemColor].filter(Boolean).join(" · ")})</span>` : ""}</span>
-              <span style="font-weight:700;min-width:32px;text-align:center;">×${item.quantity}</span>
-              <span style="font-weight:900;min-width:65px;text-align:left;">${itemTotal > 0 ? `${itemTotal.toFixed(0)} ج.م` : "—"}</span>
+            return `<div style="display:flex;align-items:center;gap:4px;padding:3px 8px;font-size:11px;border-bottom:1px dashed #888;">
+              <span style="font-weight:900;font-size:12px;min-width:16px;">${idx + 1}.</span>
+              <span style="flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.productName}${(item.itemSize || item.itemColor) ? ` <span style="font-weight:400;font-size:9px;">(${[item.itemSize, item.itemColor].filter(Boolean).join(" · ")})</span>` : ""}</span>
+              <span style="font-weight:700;min-width:26px;text-align:center;">×${item.quantity}</span>
+              <span style="font-weight:900;min-width:55px;text-align:left;">${itemTotal > 0 ? `${itemTotal.toFixed(0)} ج.م` : "—"}</span>
             </div>`;
           }).join("") || ""}
         </div>
       </div>
-      <div style="position:relative;z-index:1;border:2.5px solid #000;border-top:0;display:flex;align-items:stretch;">
-        <div style="flex:1;padding:4px 6px;text-align:center;font-size:11px;border-left:1.5px solid #000;">
-          <div>المنتجات</div><div style="font-weight:900;font-size:14px;">${totalAmount.toFixed(0)}</div>
+      <div style="position:relative;z-index:1;border:2px solid #000;border-top:0;display:flex;align-items:stretch;flex-shrink:0;">
+        <div style="flex:1;padding:3px 4px;text-align:center;font-size:9px;border-left:1px solid #000;">
+          <div>المنتجات</div><div style="font-weight:900;font-size:12px;">${totalAmount.toFixed(0)}</div>
         </div>
-        <div style="flex:1;padding:4px 6px;text-align:center;font-size:11px;border-left:1.5px solid #000;">
-          <div>الشحن</div><div style="font-weight:900;font-size:14px;">${customerShipping.toFixed(0)}</div>
+        <div style="flex:1;padding:3px 4px;text-align:center;font-size:9px;border-left:1px solid #000;">
+          <div>الشحن</div><div style="font-weight:900;font-size:12px;">${customerShipping.toFixed(0)}</div>
         </div>
-        <div style="flex:1;padding:4px 6px;text-align:center;font-size:11px;border-left:1.5px solid #000;">
-          <div>المندوب</div><div style="font-weight:700;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${order.delivery_agents?.name || "—"}</div>
+        <div style="flex:1;padding:3px 4px;text-align:center;font-size:9px;border-left:1px solid #000;">
+          <div>المندوب</div><div style="font-weight:700;font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${order.delivery_agents?.name || "—"}</div>
         </div>
-        <div style="flex:3;padding:10px 14px;text-align:center;background:#000;color:#fff;display:flex;flex-direction:column;justify-content:center;">
-          <div style="font-size:14px;letter-spacing:3px;font-weight:700;">الإجمالي المطلوب</div>
-          <div style="font-size:40px;font-weight:900;line-height:1;margin-top:3px;">${totalPrice.toFixed(0)} <span style="font-size:20px;">ج.م</span></div>
+        <div style="flex:3;padding:5px 8px;text-align:center;background:${palette.bar};color:#fff;display:flex;flex-direction:column;justify-content:center;">
+          <div style="font-size:11px;letter-spacing:2px;font-weight:700;">الإجمالي المطلوب</div>
+          <div style="font-size:28px;font-weight:900;line-height:1;margin-top:1px;">${totalPrice.toFixed(0)} <span style="font-size:14px;">ج.م</span></div>
         </div>
       </div>
-      ${partialNote ? `<div style="position:relative;z-index:1;margin-top:3px;border:2px dashed #000;padding:4px 8px;font-size:12px;font-weight:700;">⚠ تسليم جزئي: ${partialNote}</div>` : ""}
-      <div style="position:relative;z-index:1;border:1.5px solid #000;border-top:0;padding:5px 10px;font-size:11px;line-height:1.5;text-align:center;font-weight:700;">
-        معاينة الطرد قبل الاستلام وعدم استخدامه · في حالة الرفض يتم دفع رسوم شحن للمندوب 65 ج
+      ${partialNote ? `<div style="position:relative;z-index:1;margin-top:2px;border:1.5px dashed #000;padding:2px 6px;font-size:10px;font-weight:700;flex-shrink:0;">⚠ تسليم جزئي: ${partialNote}</div>` : ""}
+      <div style="position:relative;z-index:1;border:1px solid #000;border-top:0;padding:3px 8px;font-size:9px;line-height:1.3;text-align:center;font-weight:700;flex-shrink:0;">
+        معاينة الطرد قبل الاستلام · رسوم رفض 65 ج للمندوب
       </div>
     </div>
   </div>`;
@@ -201,9 +212,11 @@ export const printInvoices = (orders: InvoiceOrder[], opts: PrintInvoicesOptions
   if (!printWindow) return;
 
   const cells: string[] = [];
+  let cellCounter = 0;
   for (let c = 0; c < copies; c++) {
     orders.forEach(o => {
-      cells.push(generateInvoiceCell(o, { brandName, watermarkText, logoUrl, partialNote: partialNotes[o.id] }));
+      cells.push(generateInvoiceCell(o, { brandName, watermarkText, logoUrl, partialNote: partialNotes[o.id], cellIndex: cellCounter % 4 }));
+      cellCounter++;
     });
   }
 
