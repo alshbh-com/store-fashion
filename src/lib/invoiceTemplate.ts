@@ -106,10 +106,20 @@ export interface InvoiceCellOptions {
   watermarkText: string;
   logoUrl?: string | null;
   partialNote?: string;
+  cellIndex?: number;
 }
 
+// Distinct color palette per cell position to avoid confusion between invoices on same page
+const CELL_COLORS = [
+  { bar: "#0F172A", accent: "#1E293B", tag: "A" }, // dark slate
+  { bar: "#7C2D12", accent: "#9A3412", tag: "B" }, // burnt orange
+  { bar: "#14532D", accent: "#166534", tag: "C" }, // forest green
+  { bar: "#581C87", accent: "#6B21A8", tag: "D" }, // purple
+];
+
 export const generateInvoiceCell = (order: InvoiceOrder, opts: InvoiceCellOptions): string => {
-  const { brandName, watermarkText, logoUrl, partialNote } = opts;
+  const { brandName, watermarkText, logoUrl, partialNote, cellIndex = 0 } = opts;
+  const palette = CELL_COLORS[cellIndex % 4];
   const totalAmount = parseFloat(order.total_amount.toString());
   const customerShipping = parseFloat((order.shipping_cost || 0).toString());
   const totalPrice = totalAmount + customerShipping;
