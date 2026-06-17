@@ -212,9 +212,11 @@ export const printInvoices = (orders: InvoiceOrder[], opts: PrintInvoicesOptions
   if (!printWindow) return;
 
   const cells: string[] = [];
+  let cellCounter = 0;
   for (let c = 0; c < copies; c++) {
     orders.forEach(o => {
-      cells.push(generateInvoiceCell(o, { brandName, watermarkText, logoUrl, partialNote: partialNotes[o.id] }));
+      cells.push(generateInvoiceCell(o, { brandName, watermarkText, logoUrl, partialNote: partialNotes[o.id], cellIndex: cellCounter % 4 }));
+      cellCounter++;
     });
   }
 
