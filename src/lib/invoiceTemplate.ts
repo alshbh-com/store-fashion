@@ -192,8 +192,8 @@ export const generateInvoiceCell = (order: InvoiceOrder, opts: InvoiceCellOption
         </div>
       </div>
       ${partialNote ? `<div style="position:relative;z-index:1;margin-top:2px;border:1.5px dashed #000;padding:2px 6px;font-size:10px;font-weight:700;flex-shrink:0;">⚠ تسليم جزئي: ${partialNote}</div>` : ""}
-      <div style="position:relative;z-index:1;border:1px solid #000;border-top:0;padding:3px 8px;font-size:9px;line-height:1.3;text-align:center;font-weight:700;flex-shrink:0;">
-        معاينة الطرد قبل الاستلام · رسوم رفض 65 ج للمندوب
+      <div style="position:relative;z-index:1;border:1px solid #000;border-top:0;padding:3px 8px;font-size:9px;line-height:1.4;text-align:center;font-weight:700;flex-shrink:0;">
+        عميلنا العزيز يحق لك معاينة المنتج جيداً قبل الاستلام ويتم دفع مصاريف الشحن للمندوب في حالة الاستلام أو عدم الاستلام ♥️
       </div>
     </div>
   </div>`;
