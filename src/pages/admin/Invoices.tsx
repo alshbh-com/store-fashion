@@ -398,7 +398,7 @@ const Invoices = () => {
 
         <!-- Footer notes -->
         <div style="position:relative;z-index:1;border:1.5px solid #000;border-top:0;padding:5px 10px;font-size:11px;line-height:1.5;text-align:center;font-weight:700;">
-          معاينة الطرد قبل الاستلام وعدم استخدامه · في حالة الرفض يتم دفع رسوم شحن للمندوب 65 ج
+          عميلنا العزيز يحق لك معاينة المنتج جيداً قبل الاستلام ويتم دفع مصاريف الشحن للمندوب في حالة الاستلام أو عدم الاستلام ♥️
         </div>
       </div>
     </div>`;
