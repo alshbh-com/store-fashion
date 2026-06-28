@@ -167,14 +167,16 @@ export const generateInvoiceCell = (order: InvoiceOrder, opts: InvoiceCellOption
         <div style="flex:1;overflow:hidden;">
           ${invoiceItems.map((item, idx) => {
             const itemTotal = item.price * item.quantity;
-            return `<div style="display:flex;align-items:center;gap:4px;padding:3px 8px;font-size:11px;border-bottom:1px dashed #888;">
+            const variant = [item.itemSize, item.itemColor].filter(Boolean).join(" · ");
+            return `<div style="display:flex;align-items:flex-start;gap:4px;padding:3px 8px;font-size:11px;border-bottom:1px dashed #888;">
               <span style="font-weight:900;font-size:12px;min-width:16px;">${idx + 1}.</span>
-              <span style="flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.productName}${(item.itemSize || item.itemColor) ? ` <span style="font-weight:400;font-size:9px;">(${[item.itemSize, item.itemColor].filter(Boolean).join(" · ")})</span>` : ""}</span>
+              <span style="flex:1;font-weight:700;word-wrap:break-word;white-space:normal;line-height:1.3;">${item.productName}${variant ? ` <span style="font-weight:500;font-size:10px;color:#333;">— ${variant}</span>` : ""}</span>
               <span style="font-weight:700;min-width:26px;text-align:center;">×${item.quantity}</span>
               <span style="font-weight:900;min-width:55px;text-align:left;">${itemTotal > 0 ? `${itemTotal.toFixed(0)} ج.م` : "—"}</span>
             </div>`;
           }).join("") || ""}
         </div>
+
       </div>
       <div style="position:relative;z-index:1;border:2px solid #000;border-top:0;display:flex;align-items:stretch;flex-shrink:0;">
         <div style="flex:1;padding:3px 4px;text-align:center;font-size:9px;border-left:1px solid #000;">
