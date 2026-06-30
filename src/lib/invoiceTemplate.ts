@@ -206,7 +206,7 @@ export interface PrintInvoicesOptions extends InvoiceCellOptions {
   partialNotes?: Record<string, string>;
 }
 
-// Opens a print window with the standard 2x2 A4 grid invoices layout.
+// Opens a print window with a 2x2 A4 grid where each page contains 4 identical copies of one invoice.
 export const printInvoices = (orders: InvoiceOrder[], opts: PrintInvoicesOptions): void => {
   if (!orders?.length) return;
   const { copies = 1, partialNotes = {}, brandName, watermarkText, logoUrl } = opts;
@@ -214,14 +214,20 @@ export const printInvoices = (orders: InvoiceOrder[], opts: PrintInvoicesOptions
   if (!printWindow) return;
 
   const cells: string[] = [];
-  let cellCounter = 0;
   for (let c = 0; c < copies; c++) {
-    orders.forEach(o => {
-      // Print each invoice twice side-by-side (same row = identical copies)
-      const cellHtml = generateInvoiceCell(o, { brandName, watermarkText, logoUrl, partialNote: partialNotes[o.id], cellIndex: cellCounter % 4 });
-      cells.push(cellHtml);
-      cells.push(cellHtml);
-      cellCounter++;
+    orders.forEach((o, orderIdx) => {
+      // Each order fills one A4 page with 4 identical copies arranged in a 2x2 grid:
+      // two copies on the top row and two copies on the bottom row.
+      const cellHtml = generateInvoiceCell(o, {
+        brandName,
+        watermarkText,
+        logoUrl,
+        partialNote: partialNotes[o.id],
+        cellIndex: orderIdx,
+      });
+      for (let i = 0; i < 4; i++) {
+        cells.push(cellHtml);
+      }
     });
   }
 
@@ -231,6 +237,7 @@ export const printInvoices = (orders: InvoiceOrder[], opts: PrintInvoicesOptions
     while (pageCells.length < 4) pageCells.push('<div class="invoice-cell"></div>');
     pagesHTML += `<div class="page">${pageCells.join("")}</div>`;
   }
+
 
   printWindow.document.write(`<html dir="rtl"><head><title>طباعة الفواتير</title>
     <style>
