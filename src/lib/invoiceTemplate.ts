@@ -206,7 +206,7 @@ export interface PrintInvoicesOptions extends InvoiceCellOptions {
   partialNotes?: Record<string, string>;
 }
 
-// Opens a print window with the standard 2x2 A4 grid invoices layout.
+// Opens a print window with a 2x2 A4 grid where each page contains 4 identical copies of one invoice.
 export const printInvoices = (orders: InvoiceOrder[], opts: PrintInvoicesOptions): void => {
   if (!orders?.length) return;
   const { copies = 1, partialNotes = {}, brandName, watermarkText, logoUrl } = opts;
