@@ -217,7 +217,10 @@ export const printInvoices = (orders: InvoiceOrder[], opts: PrintInvoicesOptions
   let cellCounter = 0;
   for (let c = 0; c < copies; c++) {
     orders.forEach(o => {
-      cells.push(generateInvoiceCell(o, { brandName, watermarkText, logoUrl, partialNote: partialNotes[o.id], cellIndex: cellCounter % 4 }));
+      // Print each invoice twice side-by-side (same row = identical copies)
+      const cellHtml = generateInvoiceCell(o, { brandName, watermarkText, logoUrl, partialNote: partialNotes[o.id], cellIndex: cellCounter % 4 });
+      cells.push(cellHtml);
+      cells.push(cellHtml);
       cellCounter++;
     });
   }
