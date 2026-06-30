@@ -1276,56 +1276,100 @@ const Orders = () => {
                 </Select>
               </div>
               <div className="border-t pt-4">
-                <h4 className="font-medium mb-3">تفاصيل المنتج</h4>
-                <div className="space-y-3">
-                  <div>
-                    <Label>اسم المنتج</Label>
-                    <Input
-                      value={manualOrder.productName}
-                      onChange={(e) => setManualOrder({ ...manualOrder, productName: e.target.value })}
-                      placeholder="اسم المنتج"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label>سعر القطعة *</Label>
-                      <Input
-                        type="number"
-                        value={manualOrder.productPrice}
-                        onChange={(e) => setManualOrder({ ...manualOrder, productPrice: e.target.value })}
-                        placeholder="السعر"
-                        min="0"
-                      />
-                    </div>
-                    <div>
-                      <Label>الكمية *</Label>
-                      <Input
-                        type="number"
-                        value={manualOrder.productQuantity}
-                        onChange={(e) => setManualOrder({ ...manualOrder, productQuantity: e.target.value })}
-                        placeholder="1"
-                        min="1"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label>المقاس</Label>
-                      <Input
-                        value={manualOrder.productSize}
-                        onChange={(e) => setManualOrder({ ...manualOrder, productSize: e.target.value })}
-                        placeholder="مثل: L, XL, 42"
-                      />
-                    </div>
-                    <div>
-                      <Label>اللون</Label>
-                      <Input
-                        value={manualOrder.productColor}
-                        onChange={(e) => setManualOrder({ ...manualOrder, productColor: e.target.value })}
-                        placeholder="اللون"
-                      />
-                    </div>
-                  </div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-medium">تفاصيل المنتجات (حتى 5 منتجات)</h4>
+                  {manualOrder.items.length < 5 && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        setManualOrder({ ...manualOrder, items: [...manualOrder.items, emptyItem()] })
+                      }
+                    >
+                      + إضافة منتج
+                    </Button>
+                  )}
+                </div>
+                <div className="space-y-4">
+                  {manualOrder.items.map((item, idx) => {
+                    const updateItem = (patch: Partial<typeof item>) => {
+                      const next = [...manualOrder.items];
+                      next[idx] = { ...next[idx], ...patch };
+                      setManualOrder({ ...manualOrder, items: next });
+                    };
+                    return (
+                      <div key={idx} className="border rounded-lg p-3 space-y-2 bg-muted/30">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-muted-foreground">منتج #{idx + 1}</span>
+                          {manualOrder.items.length > 1 && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              className="text-destructive h-7"
+                              onClick={() =>
+                                setManualOrder({
+                                  ...manualOrder,
+                                  items: manualOrder.items.filter((_, i) => i !== idx),
+                                })
+                              }
+                            >
+                              حذف
+                            </Button>
+                          )}
+                        </div>
+                        <div>
+                          <Label className="text-xs">اسم المنتج</Label>
+                          <Input
+                            value={item.name}
+                            onChange={(e) => updateItem({ name: e.target.value })}
+                            placeholder="اسم المنتج"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Label className="text-xs">سعر القطعة *</Label>
+                            <Input
+                              type="number"
+                              value={item.price}
+                              onChange={(e) => updateItem({ price: e.target.value })}
+                              placeholder="السعر"
+                              min="0"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">الكمية *</Label>
+                            <Input
+                              type="number"
+                              value={item.quantity}
+                              onChange={(e) => updateItem({ quantity: e.target.value })}
+                              placeholder="1"
+                              min="1"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Label className="text-xs">المقاس</Label>
+                            <Input
+                              value={item.size}
+                              onChange={(e) => updateItem({ size: e.target.value })}
+                              placeholder="L, XL, 42"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">اللون</Label>
+                            <Input
+                              value={item.color}
+                              onChange={(e) => updateItem({ color: e.target.value })}
+                              placeholder="اللون"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
               <div>
@@ -1338,17 +1382,25 @@ const Orders = () => {
                   min="0"
                 />
               </div>
-              {manualOrder.productPrice && (
-                <div className="bg-muted p-3 rounded-lg">
-                  <p className="text-sm font-medium">
-                    الإجمالي: {((parseFloat(manualOrder.productPrice) || 0) * (parseInt(manualOrder.productQuantity) || 1) + (parseFloat(manualOrder.shippingCost) || 0)).toFixed(2)} ج.م
-                  </p>
-                </div>
-              )}
-              <Button 
+              {(() => {
+                const itemsTotal = manualOrder.items.reduce(
+                  (s, it) => s + (parseFloat(it.price) || 0) * (parseInt(it.quantity) || 1),
+                  0
+                );
+                if (itemsTotal <= 0) return null;
+                return (
+                  <div className="bg-muted p-3 rounded-lg">
+                    <p className="text-sm font-medium">
+                      الإجمالي: {(itemsTotal + (parseFloat(manualOrder.shippingCost) || 0)).toFixed(2)} ج.م
+                    </p>
+                  </div>
+                );
+              })()}
+              <Button
                 onClick={() => {
-                  if (!manualOrder.productPrice) {
-                    toast.error("يرجى إدخال سعر المنتج");
+                  const hasValid = manualOrder.items.some((it) => (parseFloat(it.price) || 0) > 0);
+                  if (!hasValid) {
+                    toast.error("يرجى إدخال منتج واحد على الأقل بسعر صحيح");
                     return;
                   }
                   createManualOrderMutation.mutate();
@@ -1358,6 +1410,7 @@ const Orders = () => {
               >
                 {createManualOrderMutation.isPending ? "جاري الإنشاء..." : "إنشاء الأوردر"}
               </Button>
+
             </div>
           </DialogContent>
         </Dialog>
