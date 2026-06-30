@@ -504,7 +504,11 @@ const Orders = () => {
           
           if (customerError) throw customerError;
           customerId = customer.id;
+        }
+      }
+
       // Filter valid items (must have price > 0)
+
       const validItems = manualOrder.items
         .map((it) => ({
           name: it.name.trim(),
