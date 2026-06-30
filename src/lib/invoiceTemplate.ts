@@ -213,11 +213,13 @@ export const printInvoices = (orders: InvoiceOrder[], opts: PrintInvoicesOptions
   const printWindow = window.open("", "_blank");
   if (!printWindow) return;
 
+  // Layout: each page shows up to 2 different orders; each order occupies a full row (2 identical copies side-by-side).
+  // - 1 order  => top row only (2 copies), bottom row empty
+  // - 2 orders => order A on top row (2 copies), order B on bottom row (2 copies)
+  // - 3 orders => page1: A top + B bottom; page2: C top only
   const cells: string[] = [];
   for (let c = 0; c < copies; c++) {
     orders.forEach((o, orderIdx) => {
-      // Each order fills one A4 page with 4 identical copies arranged in a 2x2 grid:
-      // two copies on the top row and two copies on the bottom row.
       const cellHtml = generateInvoiceCell(o, {
         brandName,
         watermarkText,
@@ -225,13 +227,13 @@ export const printInvoices = (orders: InvoiceOrder[], opts: PrintInvoicesOptions
         partialNote: partialNotes[o.id],
         cellIndex: orderIdx,
       });
-      for (let i = 0; i < 4; i++) {
-        cells.push(cellHtml);
-      }
+      // Two identical copies per order, forming one full row on the A4 page
+      cells.push(cellHtml, cellHtml);
     });
   }
 
   let pagesHTML = "";
+  // Two orders (4 cells) per page; if an order is alone, its row prints and the other row stays empty.
   for (let i = 0; i < cells.length; i += 4) {
     const pageCells = cells.slice(i, i + 4);
     while (pageCells.length < 4) pageCells.push('<div class="invoice-cell"></div>');
