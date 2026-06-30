@@ -254,18 +254,16 @@ const Orders = () => {
     }
   };
 
+  const emptyItem = () => ({ name: "", price: "", size: "", color: "", quantity: "1" });
   const [manualOrder, setManualOrder] = useState({
     customerName: "",
     phone: "",
     address: "",
-    productName: "",
-    productPrice: "",
-    productSize: "",
-    productColor: "",
-    productQuantity: "1",
+    items: [emptyItem()] as { name: string; price: string; size: string; color: string; quantity: string }[],
     shippingCost: "",
     governorateId: ""
   });
+
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ["orders"],
