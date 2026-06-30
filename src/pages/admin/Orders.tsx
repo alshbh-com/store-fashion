@@ -504,21 +504,29 @@ const Orders = () => {
           
           if (customerError) throw customerError;
           customerId = customer.id;
-        }
-      }
+      // Filter valid items (must have price > 0)
+      const validItems = manualOrder.items
+        .map((it) => ({
+          name: it.name.trim(),
+          price: parseFloat(it.price) || 0,
+          quantity: parseInt(it.quantity) || 1,
+          size: it.size.trim() || null,
+          color: it.color.trim() || null,
+        }))
+        .filter((it) => it.price > 0);
 
-      const productPrice = parseFloat(manualOrder.productPrice) || 0;
-      const quantity = parseInt(manualOrder.productQuantity) || 1;
-      const totalProductPrice = productPrice * quantity;
+      if (validItems.length === 0) throw new Error("يجب إدخال منتج واحد على الأقل بسعر صحيح");
+
+      const totalProductPrice = validItems.reduce((s, it) => s + it.price * it.quantity, 0);
       const shippingCost = parseFloat(manualOrder.shippingCost) || selectedGov?.shipping_cost || 0;
 
-      const productDetails = manualOrder.productName ? [{
-        name: manualOrder.productName,
-        quantity: quantity,
-        price: productPrice,
-        size: manualOrder.productSize || null,
-        color: manualOrder.productColor || null
-      }] : null;
+      const productDetails = validItems.map((it) => ({
+        name: it.name || "منتج",
+        quantity: it.quantity,
+        price: it.price,
+        size: it.size,
+        color: it.color,
+      }));
 
       // Create order
       const { data: order, error: orderError } = await supabase
@@ -529,33 +537,29 @@ const Orders = () => {
           shipping_cost: shippingCost,
           governorate_id: manualOrder.governorateId && manualOrder.governorateId.trim() !== "" ? manualOrder.governorateId : null,
           status: 'pending',
-          order_details: productDetails ? JSON.stringify(productDetails) : null
+          order_details: JSON.stringify(productDetails)
         })
         .select()
         .single();
       
       if (orderError) throw orderError;
 
-      // If product name provided, create order item
-      if (manualOrder.productName) {
-        const { error: itemError } = await supabase
-          .from("order_items")
-          .insert({
-            order_id: order.id,
-            quantity: quantity,
-            price: productPrice,
-            size: manualOrder.productSize || null,
-            color: manualOrder.productColor || null,
-            product_details: JSON.stringify({ 
-              name: manualOrder.productName, 
-              price: productPrice,
-              size: manualOrder.productSize || null,
-              color: manualOrder.productColor || null
-            })
-          });
-        
-        if (itemError) throw itemError;
-      }
+      // Insert all items
+      const itemRows = validItems.map((it) => ({
+        order_id: order.id,
+        quantity: it.quantity,
+        price: it.price,
+        size: it.size,
+        color: it.color,
+        product_details: JSON.stringify({
+          name: it.name || "منتج",
+          price: it.price,
+          size: it.size,
+          color: it.color,
+        }),
+      }));
+      const { error: itemError } = await supabase.from("order_items").insert(itemRows as any);
+      if (itemError) throw itemError;
 
       return order;
     },
@@ -568,15 +572,12 @@ const Orders = () => {
         customerName: "",
         phone: "",
         address: "",
-        productName: "",
-        productPrice: "",
-        productSize: "",
-        productColor: "",
-        productQuantity: "1",
+        items: [emptyItem()],
         shippingCost: "",
         governorateId: ""
       });
     },
+
     onError: (error: any) => {
       console.error("Error creating order:", error);
       toast.error(`حدث خطأ: ${error?.message || "خطأ غير معروف"}`);
