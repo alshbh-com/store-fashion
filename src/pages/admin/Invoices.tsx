@@ -15,6 +15,7 @@ import { useState, useMemo, useEffect } from "react";
 import * as XLSX from "xlsx";
 import { useTheme } from "@/contexts/ThemeContext";
 import { generateBarcodeDataUrl } from "@/lib/barcodeUtils";
+import { printInvoices as sharedPrintInvoices } from "@/lib/invoiceTemplate";
 
 type InvoiceItemRow = {
   productName: string;
@@ -413,37 +414,13 @@ const Invoices = () => {
     const watermarkText = selectedOffice ? (selectedOffice.watermark_name || selectedOffice.name) : invoiceName;
     const logoUrl = selectedOffice?.logo_url || null;
 
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-
-    const cells: string[] = [];
-    for (let c = 0; c < printCopies; c++) {
-      ordersToPrint.forEach(order => {
-        cells.push(generateInvoiceCell(order, brandName, watermarkText, logoUrl));
-      });
-    }
-
-    let pagesHTML = '';
-    for (let i = 0; i < cells.length; i += 4) {
-      const pageCells = cells.slice(i, i + 4);
-      while (pageCells.length < 4) {
-        pageCells.push('<div class="invoice-cell"></div>');
-      }
-      pagesHTML += `<div class="page">${pageCells.join('')}</div>`;
-    }
-
-    printWindow.document.write(`<html dir="rtl"><head><title>طباعة الفواتير</title>
-      <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:Arial,sans-serif}
-        .page{width:210mm;height:297mm;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:0;page-break-after:always}
-        .page:last-child{page-break-after:auto}
-        .invoice-cell{width:105mm;height:148.5mm;border:0.5px dashed #ccc;overflow:hidden;box-sizing:border-box}
-        @page{margin:0;size:A4}
-        @media print{.invoice-cell{border:0.5px dashed #bbb}}
-      </style></head><body>${pagesHTML}</body></html>`);
-    printWindow.document.close();
-    setTimeout(() => printWindow.print(), 150);
+    // Unified print: each order fills a full A4 page with 4 identical copies (2x2 grid)
+    sharedPrintInvoices(ordersToPrint, {
+      brandName,
+      watermarkText,
+      logoUrl,
+      copies: printCopies,
+    });
   };
 
   // تحديد/إلغاء تحديد الكل
